@@ -3,7 +3,9 @@
     "username": "mpizz1",
     "password": "Franklin27!",
     "store_number": "14320",
-    "search_term": "pokemon"
+    "search_term": "pokemon",
+    "base_url": "https://acenet.aceservices.com",
+    "user_ID": "mpizz1"
   },
   "notifications": {
     "smtp_host": "smtp.gmail.com",

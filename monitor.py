@@ -37,8 +37,7 @@ MOBILE_VIEWPORT = {"width": 390, "height": 844}
 ALERT_TAGS = ["NEW", "ON ORDER FOR RSC"]
 
 # ── URLs ─────────────────────────────────────────────────────
-LOGIN_URL = "https://acenet.acehardware.com/login"
-SEARCH_URL = "https://acenet.acehardware.com/store/{store}/search?q={term}"
+SEARCH_URL = 'https://acenet.aceservices.com/search/product?q={{"QueryText":"{term}","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"{user}"}}'
 
 
 def load_config():
@@ -74,13 +73,13 @@ def login(page, cfg):
     acenet = cfg["acenet"]
     try:
         log.info("Navigating to login page...")
-        page.goto(LOGIN_URL, timeout=30000)
+        page.goto(acenet["base_url"], timeout=30000)
         page.wait_for_load_state("networkidle", timeout=30000)
 
         # Fill credentials
         page.fill('input[name="username"], input[type="text"]', acenet["username"])
         page.fill('input[name="password"], input[type="password"]', acenet["password"])
-        page.click('button[type="submit"], input[type="submit"]')
+        page.click('button.login-Btn')
         page.wait_for_load_state("networkidle", timeout=30000)
 
         # Check if login worked
@@ -100,11 +99,10 @@ def login(page, cfg):
 
 
 def search_pokemon(page, cfg):
-    """Search for pokemon and return list of items with alert tags."""
     acenet = cfg["acenet"]
     url = SEARCH_URL.format(
-        store=acenet["store_number"],
-        term=acenet["search_term"]
+        term=acenet["search_term"],
+        user=acenet["username"]
     )
 
     try:
@@ -115,36 +113,68 @@ def search_pokemon(page, cfg):
         # Scroll to load all results
         page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(2)
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        time.sleep(1)
 
-        # Get all result cards
-        results = page.query_selector_all(".product-card, .product-item, [class*='product']")
-        log.info(f"Found {len(results)} product elements")
+        # Get all product cards
+        cards = page.query_selector_all(".product-card, .product-item, [class*='product']")
+        log.info(f"Found {len(cards)} product cards")
 
         hits = []
-        for item in results:
-            text = item.inner_text().upper()
+        future_items = []
+
+        for card in cards:
+            text = card.inner_text()
+            html = card.inner_html()
 
             # Check for alert tags
-            found_tags = [tag for tag in ALERT_TAGS if tag in text]
-            if not found_tags:
+            has_new = "new-icon.svg" in html
+            has_on_order = "onordergreen" in html
+            has_future = "FUTURE" in text.upper()
+
+            if not (has_new or has_on_order or has_future):
                 continue
 
-            # Extract product details
-            lines = [l.strip() for l in item.inner_text().split("\n") if l.strip()]
-            product_name = next(
-                (l for l in lines if len(l) > 10 and not l.startswith("$") and not l.startswith("SKU")),
-                "Unknown Product"
-            )
-            sku = next((l for l in lines if "SKU:" in l.upper()), "")
+            # Extract SKU
+            sku_element = card.query_selector('[class*="sku"], [id*="sku"]')
+            sku_text = sku_element.inner_text() if sku_element else ""
+            if not sku_text:
+                # Try to find SKU in text
+                lines = text.split("\n")
+                sku_text = next((l.strip() for l in lines if "SKU" in l.upper()), "Unknown SKU")
 
-            hits.append({
-                "name": product_name,
-                "sku": sku,
-                "tags": found_tags,
-                "raw": item.inner_text()[:300]
-            })
+            # Extract product name
+            name_element = card.query_selector('[class*="name"], [class*="title"], h2, h3')
+            product_name = name_element.inner_text() if name_element else "Unknown Product"
 
-        return hits
+            tags = []
+            if has_new:
+                tags.append("NEW")
+            if has_on_order:
+                tags.append("ON ORDER FOR RSC")
+            if has_future:
+                tags.append("FUTURE")
+
+            item = {
+                "name": product_name.strip(),
+                "sku": sku_text.strip(),
+                "tags": tags,
+            }
+
+            if has_new or has_on_order:
+                hits.append(item)
+            elif has_future:
+                future_items.append(item)
+
+        return hits, future_items
+
+    except PlaywrightTimeout:
+        log.error("Search timed out")
+        return None, None
+    except Exception as e:
+        log.error(f"Search error: {e}")
+        traceback.print_exc()
+        return None, None
 
     except PlaywrightTimeout:
         log.error("Search timed out")
@@ -187,7 +217,7 @@ def run():
 
             # Run check
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                browser = p.chromium.launch(headless=False)
                 context = browser.new_context(
                     user_agent=MOBILE_USER_AGENT,
                     viewport=MOBILE_VIEWPORT,
@@ -202,7 +232,7 @@ def run():
                     time.sleep(poll_seconds)
                     continue
 
-                hits = search_pokemon(page, cfg)
+                hits, future_items = search_pokemon(page, cfg)
                 browser.close()
 
             if hits is None:

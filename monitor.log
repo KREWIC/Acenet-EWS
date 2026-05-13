@@ -1,0 +1,102 @@
+2026-05-13 14:00:51,689 [INFO] AceNet monitor starting...
+2026-05-13 14:00:53,656 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:00:56,426 [INFO] Navigating to login page...
+2026-05-13 14:00:59,213 [ERROR] Login error: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://acenet.acehardware.com/login
+Call log:
+  - navigating to "https://acenet.acehardware.com/login", waiting until "load"
+
+2026-05-13 14:01:01,048 [INFO] Alert sent: AceNet Monitor ERROR
+2026-05-13 14:02:47,770 [INFO] AceNet monitor starting...
+2026-05-13 14:02:49,419 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:02:50,134 [INFO] Navigating to login page...
+2026-05-13 14:02:51,328 [ERROR] Login error: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://acenet.acehardware.com/login
+Call log:
+  - navigating to "https://acenet.acehardware.com/login", waiting until "load"
+
+2026-05-13 14:02:53,027 [INFO] Alert sent: AceNet Monitor ERROR
+2026-05-13 14:03:10,234 [INFO] AceNet monitor starting...
+2026-05-13 14:03:11,549 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:03:12,051 [INFO] Navigating to login page...
+2026-05-13 14:03:12,164 [ERROR] Login error: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://acenet.acehardware.com/login
+Call log:
+  - navigating to "https://acenet.acehardware.com/login", waiting until "load"
+
+2026-05-13 14:03:13,708 [INFO] Alert sent: AceNet Monitor ERROR
+2026-05-13 14:08:14,389 [INFO] Navigating to login page...
+2026-05-13 14:08:14,486 [ERROR] Login error: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://acenet.acehardware.com/login
+Call log:
+  - navigating to "https://acenet.acehardware.com/login", waiting until "load"
+
+2026-05-13 14:08:15,960 [INFO] Alert sent: AceNet Monitor ERROR
+2026-05-13 14:12:02,455 [INFO] AceNet monitor starting...
+2026-05-13 14:12:04,155 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:12:04,640 [INFO] Navigating to login page...
+2026-05-13 14:12:19,427 [ERROR] Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+2026-05-13 14:14:37,179 [INFO] AceNet monitor starting...
+2026-05-13 14:14:38,457 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:14:39,053 [INFO] Navigating to login page...
+2026-05-13 14:14:48,538 [INFO] Login successful
+2026-05-13 14:14:48,538 [INFO] Searching: https://acenet.acehardware.com/store/14320/search?q=pokemon
+2026-05-13 14:14:49,832 [ERROR] Search error: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://acenet.acehardware.com/store/14320/search?q=pokemon
+Call log:
+  - navigating to "https://acenet.acehardware.com/store/14320/search?q=pokemon", waiting until "load"
+
+2026-05-13 14:14:50,227 [WARNING] Scrape returned error, will retry next cycle
+2026-05-13 14:14:50,227 [INFO] Sleeping 5 minutes...
+
+2026-05-13 14:16:19,812 [INFO] AceNet monitor starting...
+2026-05-13 14:16:21,215 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:16:21,717 [INFO] Navigating to login page...
+2026-05-13 14:16:27,644 [INFO] Login successful
+2026-05-13 14:16:27,644 [INFO] Searching: https://acenet.aceservices.com/store/14320/search?q=pokemon
+2026-05-13 14:16:32,151 [INFO] Found 0 product elements
+2026-05-13 14:16:32,322 [INFO] No alert tags found this cycle
+2026-05-13 14:16:32,322 [INFO] Sleeping 5 minutes...
+
+2026-05-13 14:16:45,318 [INFO] AceNet monitor starting...
+2026-05-13 14:16:46,549 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:16:47,065 [INFO] Navigating to login page...
+2026-05-13 14:16:52,871 [INFO] Login successful
+2026-05-13 14:16:52,872 [INFO] Searching: https://acenet.aceservices.com/store/14320/search?q=pokemon
+2026-05-13 14:16:57,335 [INFO] Found 0 product elements
+2026-05-13 14:16:57,576 [INFO] No alert tags found this cycle
+2026-05-13 14:16:57,577 [INFO] Sleeping 5 minutes...
+
+2026-05-13 14:17:08,378 [INFO] AceNet monitor starting...
+2026-05-13 14:17:09,638 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:17:10,129 [INFO] Navigating to login page...
+2026-05-13 14:17:16,042 [INFO] Login successful
+2026-05-13 14:17:16,043 [INFO] Searching: https://acenet.aceservices.com/store/14320/search?q=pokemon
+2026-05-13 14:17:20,439 [INFO] Found 0 product elements
+2026-05-13 14:17:20,606 [INFO] No alert tags found this cycle
+2026-05-13 14:17:20,606 [INFO] Sleeping 5 minutes...
+
+2026-05-13 14:17:25,880 [INFO] AceNet monitor starting...
+2026-05-13 14:17:27,269 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:17:27,811 [INFO] Navigating to login page...
+2026-05-13 14:17:34,158 [INFO] Login successful
+2026-05-13 14:17:34,158 [INFO] Searching: https://acenet.aceservices.com/store/14320/search?q=pokemon
+2026-05-13 14:17:38,713 [INFO] Found 0 product elements
+2026-05-13 14:17:38,910 [INFO] No alert tags found this cycle
+2026-05-13 14:17:38,910 [INFO] Sleeping 5 minutes...
+
+2026-05-13 14:23:20,556 [INFO] AceNet monitor starting...
+2026-05-13 14:23:21,630 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:23:22,164 [INFO] Navigating to login page...
+2026-05-13 14:23:28,367 [INFO] Login successful
+2026-05-13 14:23:28,367 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-13 14:23:34,842 [INFO] Found 0 product elements
+2026-05-13 14:23:35,052 [INFO] No alert tags found this cycle
+2026-05-13 14:23:35,052 [INFO] Sleeping 5 minutes...
+
+2026-05-13 14:30:48,382 [INFO] AceNet monitor starting...
+2026-05-13 14:30:49,622 [INFO] Alert sent: AceNet Monitor Started
+2026-05-13 14:30:50,127 [INFO] Navigating to login page...
+2026-05-13 14:30:56,328 [INFO] Login successful
+2026-05-13 14:30:56,328 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-13 14:31:01,901 [INFO] Found 0 product elements
+2026-05-13 14:31:02,042 [INFO] No alert tags found this cycle
+2026-05-13 14:31:02,043 [INFO] Sleeping 5 minutes...
+
