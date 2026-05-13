@@ -1,0 +1,22 @@
+{
+  "acenet": {
+    "username": "mpizz1",
+    "password": "Franklin27!",
+    "store_number": "14320",
+    "search_term": "pokemon"
+  },
+  "notifications": {
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587,
+    "sender_email": "maxx@lonestaracegroup.com",
+    "sender_password": "amnqnyrfywjshqay",
+    "recipients": [
+      "2819104609@tmomail.net",
+      "maxx@lonestaracegroup.com"
+    ]
+  },
+  "monitor": {
+    "poll_interval_minutes": 5,
+    "heartbeat_hour": 8
+  }
+}
