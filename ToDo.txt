@@ -4,6 +4,4 @@
 - Potentially add emails for each manager
 - add additional monitor options? Create control Panel?
 
-!FIX ON BOOT NOTIFICATIONS!
-
-Missing hits on items that move to RSC if code boots and they are already "cold"
+- Add multi item search query so we can monitor more than 1 product category at a time
