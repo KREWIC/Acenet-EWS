@@ -529,3 +529,110 @@ REPL: 9108112
 2026-05-14 14:22:40,728 [INFO] Sleeping 5 minutes...
 
 2026-05-14 14:27:41,215 [INFO] Navigating to login page...
+2026-05-14 14:33:00,351 [INFO] AceNet monitor starting...
+2026-05-14 14:33:00,831 [INFO] Navigating to login page...
+2026-05-14 14:33:07,360 [INFO] Login successful
+2026-05-14 14:33:07,360 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:33:13,939 [INFO] Found 24 product cards
+2026-05-14 14:33:14,378 [INFO] Startup cold watch SKU: 3003997
+2026-05-14 14:33:14,378 [INFO] Startup cold watch SKU: 9023046
+2026-05-14 14:33:14,378 [INFO] Startup cold watch SKU: 9077315
+REPL: 9106166
+2026-05-14 14:33:14,378 [INFO] Startup cold watch SKU: 9099622
+2026-05-14 14:33:14,378 [INFO] Startup cold watch SKU: 9108344
+REPL: 9108112
+2026-05-14 14:33:14,378 [INFO] Startup cold watch SKU: 9108372
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9121837
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9125200
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126130
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126131
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126132
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126198
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126512
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126573
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126574
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126575
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126576
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126601
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126699
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126701
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126702
+2026-05-14 14:33:14,379 [INFO] Startup cold watch SKU: 9126737
+2026-05-14 14:33:14,380 [INFO] SMS recipients removed from notification list
+2026-05-14 14:33:15,787 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 14:33:15,788 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:38:16,278 [INFO] Navigating to login page...
+2026-05-14 14:38:23,677 [INFO] Login successful
+2026-05-14 14:38:23,678 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:38:31,174 [INFO] Found 24 product cards
+2026-05-14 14:38:32,959 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:38:32,959 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:43:33,451 [INFO] Navigating to login page...
+2026-05-14 14:43:40,342 [INFO] Login successful
+2026-05-14 14:43:40,342 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:43:47,065 [INFO] Found 24 product cards
+2026-05-14 14:43:47,524 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:43:47,524 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:48:48,004 [INFO] Navigating to login page...
+2026-05-14 14:48:54,721 [INFO] Login successful
+2026-05-14 14:48:54,722 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:49:01,374 [INFO] Found 24 product cards
+2026-05-14 14:49:01,719 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:49:01,719 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:54:02,238 [INFO] Navigating to login page...
+2026-05-14 14:54:09,084 [INFO] Login successful
+2026-05-14 14:54:09,085 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:54:15,736 [INFO] Found 24 product cards
+2026-05-14 14:54:16,149 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:54:16,149 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:59:16,645 [INFO] Navigating to login page...
+2026-05-14 14:59:24,243 [INFO] Login successful
+2026-05-14 14:59:24,245 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:59:31,961 [INFO] Found 24 product cards
+2026-05-14 14:59:33,702 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:59:33,704 [INFO] Sleeping 5 minutes...
+
+2026-05-14 15:04:34,221 [INFO] Navigating to login page...
+2026-05-14 15:04:41,065 [INFO] Login successful
+2026-05-14 15:04:41,066 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 15:04:48,344 [INFO] Found 24 product cards
+2026-05-14 15:04:49,919 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 15:04:49,920 [INFO] Sleeping 5 minutes...
+
+2026-05-14 15:08:21,599 [INFO] AceNet monitor starting...
+2026-05-14 15:08:22,089 [INFO] Navigating to login page...
+2026-05-14 15:08:28,556 [INFO] Login successful
+2026-05-14 15:08:28,557 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 15:08:35,318 [INFO] Found 24 product cards
+2026-05-14 15:08:35,749 [INFO] Startup cold watch SKU: 3003997
+2026-05-14 15:08:35,749 [INFO] Startup cold watch SKU: 9023046
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9077315
+REPL: 9106166
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9099622
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9108344
+REPL: 9108112
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9108372
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9121837
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9125200
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126130
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126131
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126132
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126198
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126512
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126573
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126574
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126575
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126576
+2026-05-14 15:08:35,750 [INFO] Startup cold watch SKU: 9126601
+2026-05-14 15:08:35,751 [INFO] Startup cold watch SKU: 9126699
+2026-05-14 15:08:35,751 [INFO] Startup cold watch SKU: 9126701
+2026-05-14 15:08:35,751 [INFO] Startup cold watch SKU: 9126702
+2026-05-14 15:08:35,751 [INFO] Startup cold watch SKU: 9126737
+2026-05-14 15:08:36,847 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 15:08:36,847 [INFO] Sleeping 5 minutes...
+
