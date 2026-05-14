@@ -1,7 +1,8 @@
 """
 AceNet Pokemon Monitor
-Checks AceNet mobile view for NEW and ON ORDER FOR RSC tags
+Checks AceNet for NEW and ON ORDER FOR RSC tags
 and sends SMS/email alerts immediately when found.
+Tracks hot/cold cycles so you get alerted when a SKU reopens for ordering.
 """
 
 import json
@@ -33,10 +34,7 @@ MOBILE_USER_AGENT = (
 )
 MOBILE_VIEWPORT = {"width": 390, "height": 844}
 
-# ── Tags we care about ───────────────────────────────────────
-ALERT_TAGS = ["NEW", "ON ORDER FOR RSC"]
-
-# ── URLs ─────────────────────────────────────────────────────
+# ── Search URL ───────────────────────────────────────────────
 SEARCH_URL = 'https://acenet.aceservices.com/search/product?q={{"QueryText":"{term}","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"{user}"}}'
 
 
@@ -49,10 +47,11 @@ def send_alert(cfg, subject, body):
     """Send email + SMS alert to all recipients."""
     notif = cfg["notifications"]
     try:
+        timestamp = datetime.now().strftime("%m/%d %I:%M%p")
         msg = MIMEMultipart()
         msg["From"] = notif["sender_email"]
         msg["To"] = ", ".join(notif["recipients"])
-        msg["Subject"] = subject
+        msg["Subject"] = f"{subject} [{timestamp}]"
         msg.attach(MIMEText(body, "plain"))
 
         with smtplib.SMTP(notif["smtp_host"], notif["smtp_port"]) as server:
@@ -76,14 +75,12 @@ def login(page, cfg):
         page.goto(acenet["base_url"], timeout=30000)
         page.wait_for_load_state("networkidle", timeout=30000)
 
-        # Fill credentials
-        page.fill('input[name="username"], input[type="text"]', acenet["username"])
-        page.fill('input[name="password"], input[type="password"]', acenet["password"])
+        page.fill('input[type="text"]', acenet["username"])
+        page.fill('input[type="password"]', acenet["password"])
         page.click('button.login-Btn')
         page.wait_for_load_state("networkidle", timeout=30000)
 
-        # Check if login worked
-        if "login" in page.url.lower():
+        if "adfs" in page.url.lower() or "login" in page.url.lower():
             log.error("Login failed — still on login page")
             return False
 
@@ -99,6 +96,7 @@ def login(page, cfg):
 
 
 def search_pokemon(page, cfg):
+    """Search for pokemon and return list of items with alert tags."""
     acenet = cfg["acenet"]
     url = SEARCH_URL.format(
         term=acenet["search_term"],
@@ -110,36 +108,44 @@ def search_pokemon(page, cfg):
         page.goto(url, timeout=30000)
         page.wait_for_load_state("networkidle", timeout=30000)
 
+        # Content is inside an iframe
+        frame = page.frame(name="iframeRetailAppHostContent")
+        if not frame:
+            log.error("Could not find search iframe")
+            return None
+
+        # Wait for product cards inside the iframe
+        try:
+            frame.wait_for_selector(".product-outer", timeout=15000)
+        except:
+            log.warning("Timed out waiting for product cards in iframe")
+
         # Scroll to load all results
-        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        frame.evaluate("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(2)
-        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        frame.evaluate("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(1)
 
-        # Get all product cards
-        cards = page.query_selector_all(".product-card, .product-item, [class*='product']")
+        # Get all product cards from iframe
+        cards = frame.query_selector_all(".product-outer")
         log.info(f"Found {len(cards)} product cards")
 
         hits = []
-        future_items = []
 
         for card in cards:
             text = card.inner_text()
             html = card.inner_html()
 
-            # Check for alert tags
             has_new = "new-icon.svg" in html
             has_on_order = "onordergreen" in html
-            has_future = "FUTURE" in text.upper()
 
-            if not (has_new or has_on_order or has_future):
+            if not (has_new or has_on_order):
                 continue
 
             # Extract SKU
             sku_element = card.query_selector('[class*="sku"], [id*="sku"]')
             sku_text = sku_element.inner_text() if sku_element else ""
             if not sku_text:
-                # Try to find SKU in text
                 lines = text.split("\n")
                 sku_text = next((l.strip() for l in lines if "SKU" in l.upper()), "Unknown SKU")
 
@@ -152,47 +158,52 @@ def search_pokemon(page, cfg):
                 tags.append("NEW")
             if has_on_order:
                 tags.append("ON ORDER FOR RSC")
-            if has_future:
-                tags.append("FUTURE")
 
-            item = {
+            hits.append({
                 "name": product_name.strip(),
                 "sku": sku_text.strip(),
                 "tags": tags,
-            }
+            })
 
-            if has_new or has_on_order:
-                hits.append(item)
-            elif has_future:
-                future_items.append(item)
-
-        return hits, future_items
+        return hits
 
     except PlaywrightTimeout:
         log.error("Search timed out")
-        return None, None
+        return None
     except Exception as e:
         log.error(f"Search error: {e}")
         traceback.print_exc()
-        return None, None
-
-    except PlaywrightTimeout:
-        log.error("Search timed out")
-        return None  # None = error, [] = no hits
-    except Exception as e:
-        log.error(f"Search error: {e}")
         return None
 
 
-def format_alert_message(hits):
+def format_alert_message(hits, reopened=False):
     """Format the alert message for SMS/email."""
-    lines = [f"🚨 ACENET POKEMON ALERT — {len(hits)} item(s) found!\n"]
+    if reopened:
+        lines = [f"🔁 ACENET REORDER ALERT — {len(hits)} item(s) back in play!\n"]
+        lines.append("These SKUs were previously hot, went cold, and are now back:\n")
+    else:
+        lines = [f"🚨 ACENET POKEMON ALERT — {len(hits)} item(s) found!\n"]
     for h in hits:
         lines.append(f"TAGS: {', '.join(h['tags'])}")
         lines.append(f"Product: {h['name']}")
-        lines.append(f"{h['sku']}")
-        lines.append(f"Login: acenet.acehardware.com")
+        lines.append(f"[{', '.join(h['tags'])}] {h['name']} {h['sku']}")
+        lines.append(f"Login: acenet.aceservices.com")
         lines.append("")
+    return "\n".join(lines)
+
+
+def format_startup_message(hits):
+    """Format the startup inventory summary."""
+    lines = ["ACENET MONITOR STARTED\n"]
+    lines.append(f"Checked at: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+
+    if hits:
+        lines.append(f"ITEMS OF INTEREST ({len(hits)}):")
+        for h in hits:
+            lines.append(f"  [{', '.join(h['tags'])}] {h['name']} {h['sku']}")
+    else:
+        lines.append("ITEMS OF INTEREST: None found")
+
     return "\n".join(lines)
 
 
@@ -202,20 +213,21 @@ def run():
     heartbeat_hour = cfg["monitor"]["heartbeat_hour"]
 
     log.info("AceNet monitor starting...")
-    send_alert(cfg, "AceNet Monitor Started", "Monitor is running. You will receive alerts for NEW and ON ORDER FOR RSC Pokemon products.")
 
     last_heartbeat_day = None
-    known_hits = set()  # Track already-alerted SKUs to avoid spam
+    known_hits = set()   # SKUs currently hot — don't re-alert
+    cold_hits = set()    # SKUs that were hot, went cold — alert if they come back
+    first_run = True
 
     while True:
         try:
-            # Daily heartbeat
             now = datetime.now()
+
+            # Daily heartbeat
             if now.hour == heartbeat_hour and now.date() != last_heartbeat_day:
-                send_alert(cfg, "AceNet Monitor Heartbeat", f"Monitor is alive and running. Last check: {now.strftime('%Y-%m-%d %H:%M')}")
+                send_alert(cfg, "AceNet Monitor Heartbeat", f"Monitor is alive. Last check: {now.strftime('%Y-%m-%d %H:%M')}")
                 last_heartbeat_day = now.date()
 
-            # Run check
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=False)
                 context = browser.new_context(
@@ -227,30 +239,58 @@ def run():
                 page = context.new_page()
 
                 if not login(page, cfg):
-                    send_alert(cfg, "AceNet Monitor ERROR", "Failed to log in to AceNet. Check credentials in config.json.")
+                    send_alert(cfg, "AceNet Monitor ERROR", "Failed to log in. Check credentials in config.json.")
                     browser.close()
                     time.sleep(poll_seconds)
                     continue
 
-                hits, future_items = search_pokemon(page, cfg)
+                hits = search_pokemon(page, cfg)
                 browser.close()
 
             if hits is None:
-                # Scraping error
                 log.warning("Scrape returned error, will retry next cycle")
-            elif len(hits) == 0:
-                log.info("No alert tags found this cycle")
-                known_hits.clear()  # Reset so we re-alert if something comes back
+
+            elif first_run:
+                # On startup send full inventory summary
+                msg = format_startup_message(hits)
+                send_alert(cfg, "AceNet Monitor Started — Items of Interest", msg)
+                for h in hits:
+                    known_hits.add(h["sku"])
+                first_run = False
+
             else:
-                # Filter out already-alerted items
+                current_skus = {h["sku"] for h in hits}
+
+                # Check for SKUs that just went cold
+                newly_cold = known_hits - current_skus
+                if newly_cold:
+                    for sku in newly_cold:
+                        log.info(f"SKU went cold (watching for reorder): {sku}")
+                        cold_hits.add(sku)
+                    known_hits -= newly_cold
+
+                # Check for brand new hits (never seen before)
                 new_hits = [h for h in hits if h["sku"] not in known_hits]
-                if new_hits:
-                    msg = format_alert_message(new_hits)
-                    send_alert(cfg, f"🚨 ACENET POKEMON — {len(new_hits)} NEW ITEM(S)", msg)
-                    for h in new_hits:
+
+                # Check for reopened hits (were cold, now hot again)
+                reopened_hits = [h for h in new_hits if h["sku"] in cold_hits]
+                truly_new_hits = [h for h in new_hits if h["sku"] not in cold_hits]
+
+                if reopened_hits:
+                    msg = format_alert_message(reopened_hits, reopened=True)
+                    send_alert(cfg, f"🔁 ACENET REORDER — {len(reopened_hits)} SKU(S) BACK IN PLAY", msg)
+                    for h in reopened_hits:
                         known_hits.add(h["sku"])
-                else:
-                    log.info("Hits found but already alerted — no new notification")
+                        cold_hits.discard(h["sku"])
+
+                if truly_new_hits:
+                    msg = format_alert_message(truly_new_hits)
+                    send_alert(cfg, f"🚨 ACENET POKEMON — {len(truly_new_hits)} NEW ITEM(S)", msg)
+                    for h in truly_new_hits:
+                        known_hits.add(h["sku"])
+
+                if not new_hits:
+                    log.info(f"No new hits this cycle. Hot: {len(known_hits)} Cold: {len(cold_hits)}")
 
         except Exception as e:
             err = traceback.format_exc()
