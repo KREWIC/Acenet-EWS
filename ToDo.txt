@@ -1,0 +1,9 @@
+- Remove the page_dump.html.
+- remove or simplify monitor.log
+
+- Potentially add emails for each manager
+- add additional monitor options? Create control Panel?
+
+!FIX ON BOOT NOTIFICATIONS!
+
+Missing hits on items that move to RSC if code boots and they are already "cold"
