@@ -43,14 +43,46 @@ def load_config():
         return json.load(f)
 
 
+SMS_GATEWAY_DOMAINS = {
+    "tmomail.net",
+    "vtext.com",
+    "txt.att.net",
+    "mms.att.net",
+    "messaging.sprintpcs.com",
+    "vmobl.com",
+    "vmobile.com",
+    "myboostmobile.com",
+    "text.republicwireless.com",
+    "msg.fi.google.com",
+    "sms.mycricket.com"
+}
+
+def is_sms_gateway_address(address):
+    parts = address.split("@")
+    if len(parts) != 2:
+        return False
+    return parts[1].lower().strip() in SMS_GATEWAY_DOMAINS
+
+
 def send_alert(cfg, subject, body):
-    """Send email + SMS alert to all recipients."""
+    """Send email alert to configured recipients, optionally filtering SMS gateways."""
     notif = cfg["notifications"]
+    recipients = list(notif["recipients"])
+    if not notif.get("send_sms_alerts", True):
+        original = recipients
+        recipients = [r for r in recipients if not is_sms_gateway_address(r)]
+        if len(recipients) != len(original):
+            log.info("SMS recipients removed from notification list")
+
+    if not recipients:
+        log.warning("No recipients left after SMS filtering; alert not sent")
+        return
+
     try:
         timestamp = datetime.now().strftime("%m/%d %I:%M%p")
         msg = MIMEMultipart()
         msg["From"] = notif["sender_email"]
-        msg["To"] = ", ".join(notif["recipients"])
+        msg["To"] = ", ".join(recipients)
         msg["Subject"] = f"{subject} [{timestamp}]"
         msg.attach(MIMEText(body, "plain"))
 
@@ -59,7 +91,7 @@ def send_alert(cfg, subject, body):
             server.login(notif["sender_email"], notif["sender_password"])
             server.sendmail(
                 notif["sender_email"],
-                notif["recipients"],
+                recipients,
                 msg.as_string()
             )
         log.info(f"Alert sent: {subject}")
@@ -95,8 +127,23 @@ def login(page, cfg):
         return False
 
 
+def extract_sku_from_card(card):
+    sku_element = card.query_selector('[class*="sku"], [id*="sku"], [data-sku]')
+    sku_text = sku_element.inner_text().strip() if sku_element else ""
+    if not sku_text:
+        lines = [line.strip() for line in card.inner_text().splitlines()]
+        sku_text = next((line for line in lines if line.upper().startswith("SKU") or "SKU:" in line.upper()), "")
+
+    if ":" in sku_text:
+        sku_text = sku_text.split(":", 1)[-1].strip()
+    if sku_text.upper().startswith("SKU"):
+        sku_text = sku_text[3:].strip()
+
+    return sku_text or "Unknown SKU"
+
+
 def search_pokemon(page, cfg):
-    """Search for pokemon and return list of items with alert tags."""
+    """Search for pokemon and return list of items with alert tags plus all visible SKUs."""
     acenet = cfg["acenet"]
     url = SEARCH_URL.format(
         term=acenet["search_term"],
@@ -112,7 +159,7 @@ def search_pokemon(page, cfg):
         frame = page.frame(name="iframeRetailAppHostContent")
         if not frame:
             log.error("Could not find search iframe")
-            return None
+            return None, []
 
         # Wait for product cards inside the iframe
         try:
@@ -131,8 +178,13 @@ def search_pokemon(page, cfg):
         log.info(f"Found {len(cards)} product cards")
 
         hits = []
+        page_skus = []
 
         for card in cards:
+            sku_text = extract_sku_from_card(card)
+            if sku_text:
+                page_skus.append(sku_text)
+
             text = card.inner_text()
             html = card.inner_html()
 
@@ -141,13 +193,6 @@ def search_pokemon(page, cfg):
 
             if not (has_new or has_on_order):
                 continue
-
-            # Extract SKU
-            sku_element = card.query_selector('[class*="sku"], [id*="sku"]')
-            sku_text = sku_element.inner_text() if sku_element else ""
-            if not sku_text:
-                lines = text.split("\n")
-                sku_text = next((l.strip() for l in lines if "SKU" in l.upper()), "Unknown SKU")
 
             # Extract product name
             name_element = card.query_selector('[class*="name"], [class*="title"], h2, h3')
@@ -165,15 +210,15 @@ def search_pokemon(page, cfg):
                 "tags": tags,
             })
 
-        return hits
+        return hits, page_skus
 
     except PlaywrightTimeout:
         log.error("Search timed out")
-        return None
+        return None, []
     except Exception as e:
         log.error(f"Search error: {e}")
         traceback.print_exc()
-        return None
+        return None, []
 
 
 def format_alert_message(hits, reopened=False):
@@ -192,7 +237,7 @@ def format_alert_message(hits, reopened=False):
     return "\n".join(lines)
 
 
-def format_startup_message(hits):
+def format_startup_message(hits, cold_watch_count=0):
     """Format the startup inventory summary."""
     lines = ["ACENET MONITOR STARTED\n"]
     lines.append(f"Checked at: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
@@ -203,6 +248,10 @@ def format_startup_message(hits):
             lines.append(f"  [{', '.join(h['tags'])}] {h['name']} {h['sku']}")
     else:
         lines.append("ITEMS OF INTEREST: None found")
+
+    lines.append("")
+    lines.append(f"STARTUP COLD WATCH ITEMS: {cold_watch_count}")
+    lines.append("These SKUs are being watched for RSC reopenings.")
 
     return "\n".join(lines)
 
@@ -244,18 +293,24 @@ def run():
                     time.sleep(poll_seconds)
                     continue
 
-                hits = search_pokemon(page, cfg)
+                hits, page_skus = search_pokemon(page, cfg)
                 browser.close()
 
             if hits is None:
                 log.warning("Scrape returned error, will retry next cycle")
 
             elif first_run:
-                # On startup send full inventory summary
-                msg = format_startup_message(hits)
-                send_alert(cfg, "AceNet Monitor Started — Items of Interest", msg)
+                # On startup send full inventory summary and begin cold watch for all visible SKUs.
                 for h in hits:
                     known_hits.add(h["sku"])
+
+                startup_cold_items = set(page_skus) - known_hits
+                for sku in sorted(startup_cold_items):
+                    log.info(f"Startup cold watch SKU: {sku}")
+                    cold_hits.add(sku)
+
+                msg = format_startup_message(hits, cold_watch_count=len(startup_cold_items))
+                send_alert(cfg, "AceNet Monitor Started — Items of Interest", msg)
                 first_run = False
 
             else:

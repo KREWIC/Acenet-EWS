@@ -340,3 +340,192 @@ Call log:
 2026-05-14 08:26:37,182 [INFO] No new hits this cycle. Hot: 2 Cold: 0
 2026-05-14 08:26:37,182 [INFO] Sleeping 5 minutes...
 
+2026-05-14 10:37:25,858 [INFO] AceNet monitor starting...
+2026-05-14 10:37:38,912 [INFO] Navigating to login page...
+2026-05-14 10:37:45,152 [INFO] Login successful
+2026-05-14 10:37:45,153 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 10:37:51,957 [INFO] Found 24 product cards
+2026-05-14 10:37:53,852 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 10:37:53,852 [INFO] Sleeping 5 minutes...
+
+2026-05-14 10:42:54,356 [INFO] Navigating to login page...
+2026-05-14 10:43:00,326 [INFO] Login successful
+2026-05-14 10:43:00,326 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 10:43:07,463 [INFO] Found 24 product cards
+2026-05-14 10:43:08,434 [INFO] No new hits this cycle. Hot: 2 Cold: 0
+2026-05-14 10:43:08,435 [INFO] Sleeping 5 minutes...
+
+2026-05-14 10:53:42,833 [INFO] AceNet monitor starting...
+2026-05-14 10:53:43,310 [INFO] Navigating to login page...
+2026-05-14 10:53:50,994 [INFO] Login successful
+2026-05-14 10:53:50,994 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 10:53:57,956 [INFO] Found 24 product cards
+2026-05-14 10:54:00,027 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 10:54:00,028 [INFO] Sleeping 5 minutes...
+
+2026-05-14 10:59:00,513 [INFO] Navigating to login page...
+2026-05-14 10:59:08,634 [INFO] Login successful
+2026-05-14 10:59:08,634 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 10:59:16,138 [INFO] Found 24 product cards
+2026-05-14 10:59:16,421 [INFO] No new hits this cycle. Hot: 2 Cold: 0
+2026-05-14 10:59:16,421 [INFO] Sleeping 5 minutes...
+
+2026-05-14 11:04:16,993 [INFO] Navigating to login page...
+2026-05-14 11:08:43,474 [ERROR] Login timed out
+2026-05-14 11:08:48,406 [INFO] Alert sent: AceNet Monitor ERROR
+2026-05-14 11:09:06,827 [INFO] AceNet monitor starting...
+2026-05-14 11:09:07,302 [INFO] Navigating to login page...
+2026-05-14 11:09:14,566 [INFO] Login successful
+2026-05-14 11:09:14,567 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 11:09:22,367 [INFO] Found 24 product cards
+2026-05-14 11:09:23,972 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 11:09:23,972 [INFO] Sleeping 5 minutes...
+
+2026-05-14 11:14:24,527 [INFO] Navigating to login page...
+2026-05-14 11:14:35,524 [ERROR] Login error: Page.goto: net::ERR_NETWORK_CHANGED at https://acenet.aceservices.com/
+Call log:
+  - navigating to "https://acenet.aceservices.com/", waiting until "load"
+
+2026-05-14 11:14:46,584 [ERROR] Failed to send alert: [Errno 11001] getaddrinfo failed
+2026-05-14 11:19:47,255 [INFO] Navigating to login page...
+2026-05-14 11:19:53,256 [INFO] Login successful
+2026-05-14 11:19:53,258 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 11:20:01,603 [INFO] Found 24 product cards
+2026-05-14 11:20:02,588 [INFO] No new hits this cycle. Hot: 2 Cold: 0
+2026-05-14 11:20:02,588 [INFO] Sleeping 5 minutes...
+
+2026-05-14 11:25:03,100 [INFO] Navigating to login page...
+2026-05-14 11:25:09,640 [INFO] Login successful
+2026-05-14 11:25:09,641 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 11:25:17,402 [INFO] Found 24 product cards
+2026-05-14 11:25:18,342 [INFO] No new hits this cycle. Hot: 2 Cold: 0
+2026-05-14 11:25:18,342 [INFO] Sleeping 5 minutes...
+
+2026-05-14 11:30:18,834 [INFO] Navigating to login page...
+2026-05-14 11:30:25,175 [INFO] Login successful
+2026-05-14 11:30:25,175 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 11:30:32,244 [INFO] Found 24 product cards
+2026-05-14 11:30:33,316 [INFO] No new hits this cycle. Hot: 2 Cold: 0
+2026-05-14 11:30:33,317 [INFO] Sleeping 5 minutes...
+
+2026-05-14 11:35:33,797 [INFO] Navigating to login page...
+2026-05-14 11:35:40,612 [INFO] Login successful
+2026-05-14 11:35:40,612 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 11:35:47,834 [INFO] Found 24 product cards
+2026-05-14 11:35:48,892 [INFO] No new hits this cycle. Hot: 2 Cold: 0
+2026-05-14 11:35:48,892 [INFO] Sleeping 5 minutes...
+
+2026-05-14 11:40:49,420 [INFO] Navigating to login page...
+2026-05-14 11:40:56,045 [INFO] Login successful
+2026-05-14 11:40:56,047 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 11:41:02,363 [INFO] Found 23 product cards
+2026-05-14 11:41:04,359 [INFO] No new hits this cycle. Hot: 2 Cold: 0
+2026-05-14 11:41:04,360 [INFO] Sleeping 5 minutes...
+
+2026-05-14 11:55:45,033 [INFO] AceNet monitor starting...
+2026-05-14 11:55:53,428 [INFO] Navigating to login page...
+2026-05-14 11:56:20,740 [INFO] AceNet monitor starting...
+2026-05-14 11:56:21,310 [INFO] Navigating to login page...
+2026-05-14 11:56:29,235 [INFO] Login successful
+2026-05-14 11:56:29,238 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 11:56:35,871 [INFO] Found 23 product cards
+2026-05-14 11:56:37,877 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 11:56:37,877 [INFO] Sleeping 5 minutes...
+
+2026-05-14 13:25:03,541 [INFO] AceNet monitor starting...
+2026-05-14 13:25:04,160 [INFO] Navigating to login page...
+2026-05-14 13:25:12,075 [INFO] Login successful
+2026-05-14 13:25:12,075 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 13:25:18,727 [INFO] Found 24 product cards
+2026-05-14 13:25:20,601 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 13:25:20,601 [INFO] Sleeping 5 minutes...
+
+2026-05-14 13:38:08,966 [INFO] AceNet monitor starting...
+2026-05-14 13:38:09,436 [INFO] Navigating to login page...
+2026-05-14 13:38:15,807 [INFO] Login successful
+2026-05-14 13:38:15,807 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 13:38:22,245 [INFO] Found 24 product cards
+2026-05-14 13:38:22,620 [INFO] Startup cold watch SKU: 3003997
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9023046
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9077315
+REPL: 9106166
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9099622
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9108344
+REPL: 9108112
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9108372
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9121837
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9125200
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9126130
+2026-05-14 13:38:22,621 [INFO] Startup cold watch SKU: 9126131
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126132
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126198
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126512
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126573
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126574
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126575
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126576
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126601
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126699
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126701
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126702
+2026-05-14 13:38:22,622 [INFO] Startup cold watch SKU: 9126737
+2026-05-14 13:38:23,728 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-14 13:38:23,728 [INFO] Sleeping 5 minutes...
+
+2026-05-14 13:43:24,205 [INFO] Navigating to login page...
+2026-05-14 13:43:30,539 [INFO] Login successful
+2026-05-14 13:43:30,539 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 13:43:36,873 [INFO] Found 24 product cards
+2026-05-14 13:43:37,238 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 13:43:37,238 [INFO] Sleeping 5 minutes...
+
+2026-05-14 13:48:37,795 [INFO] Navigating to login page...
+2026-05-14 13:48:44,382 [INFO] Login successful
+2026-05-14 13:48:44,382 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 13:48:51,768 [INFO] Found 24 product cards
+2026-05-14 13:48:53,286 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 13:48:53,286 [INFO] Sleeping 5 minutes...
+
+2026-05-14 13:53:53,787 [INFO] Navigating to login page...
+2026-05-14 13:54:01,009 [INFO] Login successful
+2026-05-14 13:54:01,010 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 13:54:08,217 [INFO] Found 24 product cards
+2026-05-14 13:54:09,824 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 13:54:09,824 [INFO] Sleeping 5 minutes...
+
+2026-05-14 13:59:10,312 [INFO] Navigating to login page...
+2026-05-14 13:59:17,128 [INFO] Login successful
+2026-05-14 13:59:17,129 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 13:59:24,397 [INFO] Found 24 product cards
+2026-05-14 13:59:26,157 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 13:59:26,158 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:04:26,645 [INFO] Navigating to login page...
+2026-05-14 14:04:34,014 [INFO] Login successful
+2026-05-14 14:04:34,015 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:04:41,469 [INFO] Found 24 product cards
+2026-05-14 14:04:43,260 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:04:43,261 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:11:50,370 [INFO] Navigating to login page...
+2026-05-14 14:12:00,140 [INFO] Login successful
+2026-05-14 14:12:00,140 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:12:07,243 [INFO] Found 24 product cards
+2026-05-14 14:12:08,423 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:12:08,424 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:17:08,922 [INFO] Navigating to login page...
+2026-05-14 14:17:15,735 [INFO] Login successful
+2026-05-14 14:17:15,736 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:17:23,124 [INFO] Found 24 product cards
+2026-05-14 14:17:24,914 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:17:24,914 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:22:25,408 [INFO] Navigating to login page...
+2026-05-14 14:22:32,031 [INFO] Login successful
+2026-05-14 14:22:32,032 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-14 14:22:39,366 [INFO] Found 24 product cards
+2026-05-14 14:22:40,728 [INFO] No new hits this cycle. Hot: 2 Cold: 22
+2026-05-14 14:22:40,728 [INFO] Sleeping 5 minutes...
+
+2026-05-14 14:27:41,215 [INFO] Navigating to login page...
