@@ -6,6 +6,7 @@ Tracks hot/cold cycles so you get alerted when a SKU reopens for ordering.
 """
 
 import json
+import os
 import logging
 import smtplib
 import time
@@ -278,7 +279,8 @@ def run():
                 last_heartbeat_day = now.date()
 
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=False)
+                headless = os.getenv("HEADLESS", "true").lower() == "true"
+                browser = p.chromium.launch(headless=headless)
                 context = browser.new_context(
                     user_agent=MOBILE_USER_AGENT,
                     viewport=MOBILE_VIEWPORT,
