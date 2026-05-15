@@ -105,13 +105,17 @@ def login(page, cfg):
     acenet = cfg["acenet"]
     try:
         log.info("Navigating to login page...")
-        page.goto(acenet["base_url"], timeout=30000)
-        page.wait_for_load_state("networkidle", timeout=30000)
+        page.goto(acenet["base_url"], timeout=60000)
+        page.wait_for_load_state("networkidle", timeout=60000)
+        time.sleep(2)
 
+        page.wait_for_selector('input[type="text"]', timeout=15000)
         page.fill('input[type="text"]', acenet["username"])
         page.fill('input[type="password"]', acenet["password"])
+        time.sleep(1)
         page.click('button.login-Btn')
-        page.wait_for_load_state("networkidle", timeout=30000)
+        page.wait_for_load_state("networkidle", timeout=60000)
+        time.sleep(2)
 
         if "adfs" in page.url.lower() or "login" in page.url.lower():
             log.error("Login failed — still on login page")
@@ -153,8 +157,9 @@ def search_pokemon(page, cfg):
 
     try:
         log.info(f"Searching: {url}")
-        page.goto(url, timeout=30000)
-        page.wait_for_load_state("networkidle", timeout=30000)
+        page.goto(url, timeout=60000)
+        page.wait_for_load_state("networkidle", timeout=60000)
+        time.sleep(3)
 
         # Content is inside an iframe
         frame = page.frame(name="iframeRetailAppHostContent")
@@ -164,7 +169,7 @@ def search_pokemon(page, cfg):
 
         # Wait for product cards inside the iframe
         try:
-            frame.wait_for_selector(".product-outer", timeout=15000)
+            frame.wait_for_selector(".product-outer", timeout=30000)
         except:
             log.warning("Timed out waiting for product cards in iframe")
 

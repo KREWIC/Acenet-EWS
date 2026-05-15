@@ -764,3 +764,9 @@ Call log:
 2026-05-15 07:46:39,682 [INFO] No new hits this cycle. Hot: 2 Cold: 22
 2026-05-15 07:46:39,682 [INFO] Sleeping 5 minutes...
 
+2026-05-15 08:19:48,997 [INFO] AceNet monitor starting...
+2026-05-15 08:19:50,476 [INFO] Alert sent: AceNet Monitor Heartbeat
+2026-05-15 08:19:51,547 [INFO] Navigating to login page...
+2026-05-15 08:19:56,913 [ERROR] Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
