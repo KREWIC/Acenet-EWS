@@ -770,3 +770,38 @@ Call log:
 2026-05-15 08:19:56,913 [ERROR] Future exception was never retrieved
 future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
 playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+2026-05-15 14:12:43,673 [INFO] AceNet monitor starting...
+2026-05-15 14:12:43,674 [INFO] Loaded 0 previously seen SKUs from disk
+2026-05-15 14:12:57,164 [INFO] Navigating to login page...
+2026-05-15 14:13:12,657 [INFO] Login successful
+2026-05-15 14:13:12,657 [INFO] Searching: https://acenet.aceservices.com/search/product?q={"QueryText":"pokemon","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"mpizz1"}
+2026-05-15 14:13:22,848 [INFO] Found 25 product cards
+2026-05-15 14:13:23,164 [INFO] Startup cold watch SKU: 3003997
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 7198278
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9023046
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9077315
+REPL: 9106166
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9099622
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9108344
+REPL: 9108112
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9108372
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9121837
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9125200
+2026-05-15 14:13:23,165 [INFO] Startup cold watch SKU: 9126130
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126131
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126132
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126198
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126512
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126573
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126574
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126575
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126576
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126601
+2026-05-15 14:13:23,166 [INFO] Startup cold watch SKU: 9126699
+2026-05-15 14:13:23,167 [INFO] Startup cold watch SKU: 9126701
+2026-05-15 14:13:23,167 [INFO] Startup cold watch SKU: 9126702
+2026-05-15 14:13:23,167 [INFO] Startup cold watch SKU: 9126737
+2026-05-15 14:13:23,167 [INFO] Seeded seen inventory with 25 SKUs
+2026-05-15 14:13:24,378 [INFO] Alert sent: AceNet Monitor Started — Items of Interest
+2026-05-15 14:13:24,379 [INFO] Sleeping 5 minutes...
+

@@ -39,44 +39,33 @@ MOBILE_VIEWPORT = {"width": 390, "height": 844}
 SEARCH_URL = 'https://acenet.aceservices.com/search/product?q={{"QueryText":"{term}","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"{user}"}}'
 
 
+SEEN_SKUS_FILE = "seen_skus.json"
+
+
 def load_config():
     with open("config.json", "r") as f:
         return json.load(f)
 
 
-SMS_GATEWAY_DOMAINS = {
-    "tmomail.net",
-    "vtext.com",
-    "txt.att.net",
-    "mms.att.net",
-    "messaging.sprintpcs.com",
-    "vmobl.com",
-    "vmobile.com",
-    "myboostmobile.com",
-    "text.republicwireless.com",
-    "msg.fi.google.com",
-    "sms.mycricket.com"
-}
+def load_seen_skus():
+    try:
+        with open(SEEN_SKUS_FILE, "r") as f:
+            return set(json.load(f))
+    except FileNotFoundError:
+        return set()
 
-def is_sms_gateway_address(address):
-    parts = address.split("@")
-    if len(parts) != 2:
-        return False
-    return parts[1].lower().strip() in SMS_GATEWAY_DOMAINS
+
+def save_seen_skus(seen_skus):
+    with open(SEEN_SKUS_FILE, "w") as f:
+        json.dump(sorted(seen_skus), f, indent=2)
 
 
 def send_alert(cfg, subject, body):
-    """Send email alert to configured recipients, optionally filtering SMS gateways."""
     notif = cfg["notifications"]
     recipients = list(notif["recipients"])
-    if not notif.get("send_sms_alerts", True):
-        original = recipients
-        recipients = [r for r in recipients if not is_sms_gateway_address(r)]
-        if len(recipients) != len(original):
-            log.info("SMS recipients removed from notification list")
 
     if not recipients:
-        log.warning("No recipients left after SMS filtering; alert not sent")
+        log.warning("No recipients configured; alert not sent")
         return
 
     try:
@@ -272,6 +261,8 @@ def run():
     last_heartbeat_day = None
     known_hits = set()   # SKUs currently hot — don't re-alert
     cold_hits = set()    # SKUs that were hot, went cold — alert if they come back
+    seen_skus = load_seen_skus()
+    log.info(f"Loaded {len(seen_skus)} previously seen SKUs from disk")
     first_run = True
 
     while True:
@@ -316,6 +307,13 @@ def run():
                     log.info(f"Startup cold watch SKU: {sku}")
                     cold_hits.add(sku)
 
+                # Silently seed seen_skus on first run — no alert, just baseline
+                new_to_seen = set(page_skus) - seen_skus
+                if new_to_seen:
+                    seen_skus.update(new_to_seen)
+                    save_seen_skus(seen_skus)
+                    log.info(f"Seeded seen inventory with {len(new_to_seen)} SKUs")
+
                 msg = format_startup_message(hits, cold_watch_count=len(startup_cold_items))
                 send_alert(cfg, "AceNet Monitor Started — Items of Interest", msg)
                 first_run = False
@@ -350,6 +348,19 @@ def run():
                     send_alert(cfg, f"🚨 ACENET POKEMON — {len(truly_new_hits)} NEW ITEM(S)", msg)
                     for h in truly_new_hits:
                         known_hits.add(h["sku"])
+
+                # Check for SKUs never seen before in any prior session
+                never_seen = set(page_skus) - seen_skus
+                if never_seen:
+                    sku_list = "\n".join(sorted(never_seen))
+                    send_alert(
+                        cfg,
+                        f"🆕 ACENET — {len(never_seen)} NEW SKU(S) IN CATALOG",
+                        f"The following SKU(s) have never been seen before:\n\n{sku_list}\n\nCheck AceNet for details."
+                    )
+                    seen_skus.update(never_seen)
+                    save_seen_skus(seen_skus)
+                    log.info(f"Added {len(never_seen)} new SKUs to seen inventory")
 
                 if not new_hits:
                     log.info(f"No new hits this cycle. Hot: {len(known_hits)} Cold: {len(cold_hits)}")
