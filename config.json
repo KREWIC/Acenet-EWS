@@ -18,6 +18,9 @@
   },
   "monitor": {
     "poll_interval_minutes": 5,
-    "heartbeat_hour": 8
+    "heartbeat_hour": 8,
+    "quiet_hours_start": 22,
+    "quiet_hours_end": 7,
+    "max_results_sanity": 50
   }
 }

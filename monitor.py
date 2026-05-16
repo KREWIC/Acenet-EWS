@@ -17,13 +17,15 @@ from email.mime.multipart import MIMEMultipart
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 # ── Logging ──────────────────────────────────────────────────
+from logging.handlers import RotatingFileHandler
+
+_log_handler = RotatingFileHandler("monitor.log", maxBytes=2_000_000, backupCount=3)
+_log_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("monitor.log"),
-        logging.StreamHandler()
-    ]
+    handlers=[_log_handler, logging.StreamHandler()]
 )
 log = logging.getLogger(__name__)
 
@@ -151,6 +153,11 @@ def search_pokemon(page, cfg):
         page.wait_for_load_state("networkidle", timeout=60000)
         time.sleep(3)
 
+        # Verify we actually landed on the search results page
+        if "/search/product" not in page.url:
+            log.warning(f"Unexpected redirect after search — landed on: {page.url}. Skipping cycle.")
+            return None, []
+
         # Content is inside an iframe
         frame = page.frame(name="iframeRetailAppHostContent")
         if not frame:
@@ -173,26 +180,33 @@ def search_pokemon(page, cfg):
         cards = frame.query_selector_all(".product-outer")
         log.info(f"Found {len(cards)} product cards")
 
+        max_results = cfg["monitor"].get("max_results_sanity", 50)
+        if len(cards) > max_results:
+            log.warning(f"Result count {len(cards)} exceeds sanity limit of {max_results} — wrong page loaded, skipping cycle.")
+            return None, []
+
         hits = []
         page_skus = []
 
         for card in cards:
+            name_element = card.query_selector('[class*="name"], [class*="title"], h2, h3')
+            product_name = name_element.inner_text().strip() if name_element else ""
+
+            if "pokemon" not in product_name.lower():
+                continue
+
             sku_text = extract_sku_from_card(card)
-            if sku_text:
-                page_skus.append(sku_text)
+            if not sku_text or sku_text == "Unknown SKU":
+                log.warning(f"Could not extract SKU for '{product_name}', skipping card")
+                continue
+            page_skus.append(sku_text)
 
-            text = card.inner_text()
             html = card.inner_html()
-
             has_new = "new-icon.svg" in html
             has_on_order = "onordergreen" in html
 
             if not (has_new or has_on_order):
                 continue
-
-            # Extract product name
-            name_element = card.query_selector('[class*="name"], [class*="title"], h2, h3')
-            product_name = name_element.inner_text() if name_element else "Unknown Product"
 
             tags = []
             if has_new:
@@ -201,8 +215,8 @@ def search_pokemon(page, cfg):
                 tags.append("ON ORDER FOR RSC")
 
             hits.append({
-                "name": product_name.strip(),
-                "sku": sku_text.strip(),
+                "name": product_name,
+                "sku": sku_text,
                 "tags": tags,
             })
 
@@ -225,10 +239,9 @@ def format_alert_message(hits, reopened=False):
     else:
         lines = [f"🚨 ACENET POKEMON ALERT — {len(hits)} item(s) found!\n"]
     for h in hits:
-        lines.append(f"TAGS: {', '.join(h['tags'])}")
-        lines.append(f"Product: {h['name']}")
-        lines.append(f"[{', '.join(h['tags'])}] {h['name']} {h['sku']}")
-        lines.append(f"Login: acenet.aceservices.com")
+        lines.append(f"[{', '.join(h['tags'])}] {h['name']}")
+        lines.append(f"SKU: {h['sku']}")
+        lines.append("Login: acenet.aceservices.com")
         lines.append("")
     return "\n".join(lines)
 
@@ -266,9 +279,18 @@ def run():
     log.info(f"Loaded {len(seen_skus)} previously seen SKUs from disk")
     first_run = True
 
+    quiet_start = cfg["monitor"]["quiet_hours_start"]
+    quiet_end = cfg["monitor"]["quiet_hours_end"]
+
     while True:
         try:
             now = datetime.now()
+
+            # Skip scraping during quiet hours
+            if quiet_start <= now.hour or now.hour < quiet_end:
+                log.info(f"Quiet hours ({quiet_start}:00-{quiet_end}:00), skipping scrape")
+                time.sleep(poll_seconds)
+                continue
 
             # Daily heartbeat
             if now.hour == heartbeat_hour and now.date() != last_heartbeat_day:
