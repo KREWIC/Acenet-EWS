@@ -90,35 +90,36 @@ def send_alert(cfg, subject, body):
 
 
 def login(page, cfg):
-    """Log into AceNet and return True if successful."""
     acenet = cfg["acenet"]
-    try:
-        log.info("Navigating to login page...")
-        page.goto(acenet["base_url"], timeout=60000)
-        page.wait_for_load_state("networkidle", timeout=60000)
-        time.sleep(2)
+    for attempt in range(3):
+        try:
+            log.info(f"Login attempt {attempt + 1}/3...")
+            page.goto(acenet["base_url"], timeout=60000)
+            page.wait_for_load_state("networkidle", timeout=60000)
+            time.sleep(2)
 
-        page.wait_for_selector('input[type="text"]', timeout=15000)
-        page.fill('input[type="text"]', acenet["username"])
-        page.fill('input[type="password"]', acenet["password"])
-        time.sleep(1)
-        page.click('button.login-Btn')
-        page.wait_for_load_state("networkidle", timeout=60000)
-        time.sleep(2)
+            page.wait_for_selector('input[type="text"]', timeout=15000)
+            page.fill('input[type="text"]', acenet["username"])
+            page.fill('input[type="password"]', acenet["password"])
+            time.sleep(1)
+            page.click('button.login-Btn')
+            page.wait_for_load_state("networkidle", timeout=60000)
+            time.sleep(2)
 
-        if "adfs" in page.url.lower() or "login" in page.url.lower():
-            log.error("Login failed — still on login page")
-            return False
+            if "adfs" in page.url.lower() or "login" in page.url.lower():
+                raise Exception("Still on login page after submit")
 
-        log.info("Login successful")
-        return True
+            log.info("Login successful")
+            return True
 
-    except PlaywrightTimeout:
-        log.error("Login timed out")
-        return False
-    except Exception as e:
-        log.error(f"Login error: {e}")
-        return False
+        except Exception as e:
+            log.warning(f"Login attempt {attempt + 1} failed: {e}")
+            if attempt < 2:
+                log.info("Waiting 30 seconds before retry...")
+                time.sleep(30)
+
+    log.error("All login attempts failed")
+    return False
 
 
 def extract_sku_from_card(card):
