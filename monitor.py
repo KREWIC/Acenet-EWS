@@ -278,6 +278,7 @@ def run():
     seen_skus = load_seen_skus()
     log.info(f"Loaded {len(seen_skus)} previously seen SKUs from disk")
     first_run = True
+    consecutive_errors = 0
 
     quiet_start = cfg["monitor"]["quiet_hours_start"]
     quiet_end = cfg["monitor"]["quiet_hours_end"]
@@ -388,10 +389,14 @@ def run():
                 if not new_hits:
                     log.info(f"No new hits this cycle. Hot: {len(known_hits)} Cold: {len(cold_hits)}")
 
-        except Exception as e:
+        except Exception:
             err = traceback.format_exc()
             log.error(f"Unexpected error: {err}")
-            send_alert(cfg, "AceNet Monitor CRASH", f"Monitor crashed and restarted.\n\nError:\n{err}")
+            consecutive_errors += 1
+            if consecutive_errors >= 3:
+                send_alert(cfg, f"AceNet Monitor CRASH (x{consecutive_errors})", f"Monitor has failed {consecutive_errors} times in a row.\n\nError:\n{err}")
+        else:
+            consecutive_errors = 0
 
         log.info(f"Sleeping {cfg['monitor']['poll_interval_minutes']} minutes...\n")
         time.sleep(poll_seconds)
