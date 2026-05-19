@@ -192,7 +192,8 @@ def search_pokemon(page, cfg):
             name_element = card.query_selector('[class*="name"], [class*="title"], h2, h3')
             product_name = name_element.inner_text().strip() if name_element else ""
 
-            if "pokemon" not in product_name.lower():
+            name_lower = product_name.lower()
+            if "pokemon" not in name_lower or "trading cards" not in name_lower:
                 continue
 
             sku_text = extract_sku_from_card(card)
