@@ -273,25 +273,16 @@ def run():
     log.info("AceNet monitor starting...")
 
     last_heartbeat_day = None
-    known_hits = set()   # SKUs currently hot — don't re-alert
+    known_hits = {}      # SKU → set of tags currently active
     cold_hits = set()    # SKUs that were hot, went cold — alert if they come back
     seen_skus = load_seen_skus()
     log.info(f"Loaded {len(seen_skus)} previously seen SKUs from disk")
     first_run = True
     consecutive_errors = 0
 
-    quiet_start = cfg["monitor"]["quiet_hours_start"]
-    quiet_end = cfg["monitor"]["quiet_hours_end"]
-
     while True:
         try:
             now = datetime.now()
-
-            # Skip scraping during quiet hours
-            if quiet_start <= now.hour or now.hour < quiet_end:
-                log.info(f"Quiet hours ({quiet_start}:00-{quiet_end}:00), skipping scrape")
-                time.sleep(poll_seconds)
-                continue
 
             # Daily heartbeat
             if now.hour == heartbeat_hour and now.date() != last_heartbeat_day:
@@ -322,16 +313,14 @@ def run():
                 log.warning("Scrape returned error, will retry next cycle")
 
             elif first_run:
-                # On startup send full inventory summary and begin cold watch for all visible SKUs.
                 for h in hits:
-                    known_hits.add(h["sku"])
+                    known_hits[h["sku"]] = set(h["tags"])
 
-                startup_cold_items = set(page_skus) - known_hits
+                startup_cold_items = set(page_skus) - set(known_hits.keys())
                 for sku in sorted(startup_cold_items):
                     log.info(f"Startup cold watch SKU: {sku}")
                     cold_hits.add(sku)
 
-                # Silently seed seen_skus on first run — no alert, just baseline
                 new_to_seen = set(page_skus) - seen_skus
                 if new_to_seen:
                     seen_skus.update(new_to_seen)
@@ -345,33 +334,43 @@ def run():
             else:
                 current_skus = {h["sku"] for h in hits}
 
-                # Check for SKUs that just went cold
-                newly_cold = known_hits - current_skus
-                if newly_cold:
-                    for sku in newly_cold:
-                        log.info(f"SKU went cold (watching for reorder): {sku}")
-                        cold_hits.add(sku)
-                    known_hits -= newly_cold
+                # SKUs that disappeared entirely go cold
+                newly_cold = set(known_hits.keys()) - current_skus
+                for sku in newly_cold:
+                    log.info(f"SKU went cold (watching for reorder): {sku}")
+                    cold_hits.add(sku)
+                    del known_hits[sku]
 
-                # Check for brand new hits (never seen before)
+                # Existing SKUs that gained new tags (e.g. NEW → adds ON ORDER FOR RSC)
+                tag_change_hits = []
+                for h in hits:
+                    if h["sku"] in known_hits:
+                        new_tags = set(h["tags"]) - known_hits[h["sku"]]
+                        if new_tags:
+                            tag_change_hits.append({**h, "tags": list(new_tags)})
+                            known_hits[h["sku"]] = set(h["tags"])
+
+                # SKUs not tracked at all
                 new_hits = [h for h in hits if h["sku"] not in known_hits]
-
-                # Check for reopened hits (were cold, now hot again)
                 reopened_hits = [h for h in new_hits if h["sku"] in cold_hits]
                 truly_new_hits = [h for h in new_hits if h["sku"] not in cold_hits]
+
+                if tag_change_hits:
+                    msg = format_alert_message(tag_change_hits)
+                    send_alert(cfg, f"🔔 ACENET RSC UPDATE — {len(tag_change_hits)} SKU(S) CHANGED STATUS", msg)
 
                 if reopened_hits:
                     msg = format_alert_message(reopened_hits, reopened=True)
                     send_alert(cfg, f"🔁 ACENET REORDER — {len(reopened_hits)} SKU(S) BACK IN PLAY", msg)
                     for h in reopened_hits:
-                        known_hits.add(h["sku"])
+                        known_hits[h["sku"]] = set(h["tags"])
                         cold_hits.discard(h["sku"])
 
                 if truly_new_hits:
                     msg = format_alert_message(truly_new_hits)
                     send_alert(cfg, f"🚨 ACENET POKEMON — {len(truly_new_hits)} NEW ITEM(S)", msg)
                     for h in truly_new_hits:
-                        known_hits.add(h["sku"])
+                        known_hits[h["sku"]] = set(h["tags"])
 
                 # Check for SKUs never seen before in any prior session
                 never_seen = set(page_skus) - seen_skus
@@ -386,7 +385,7 @@ def run():
                     save_seen_skus(seen_skus)
                     log.info(f"Added {len(never_seen)} new SKUs to seen inventory")
 
-                if not new_hits:
+                if not new_hits and not tag_change_hits:
                     log.info(f"No new hits this cycle. Hot: {len(known_hits)} Cold: {len(cold_hits)}")
 
         except Exception:
