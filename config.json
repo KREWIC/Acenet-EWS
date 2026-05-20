@@ -20,5 +20,9 @@
     "poll_interval_minutes": 5,
     "heartbeat_hour": 8,
     "max_results_sanity": 50
+  },
+  "auto_order": {
+    "enabled": false,
+    "stores": ["14320", "18771", "18813"]
   }
 }
