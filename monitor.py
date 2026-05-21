@@ -150,9 +150,9 @@ def search_pokemon(page, cfg):
 
     try:
         log.info(f"Searching: {url}")
-        page.goto(url, timeout=60000)
-        page.wait_for_load_state("networkidle", timeout=60000)
-        time.sleep(3)
+        page.goto(url, timeout=120000)
+        page.wait_for_load_state("load", timeout=120000)
+        time.sleep(5)
 
         # Verify we actually landed on the search results page
         if "/search/product" not in page.url:
@@ -398,9 +398,9 @@ def attempt_order(popup, qty, sku):
 def navigate_to_search(page, cfg):
     acenet = cfg["acenet"]
     url = SEARCH_URL.format(term=acenet["search_term"], user=acenet["username"])
-    page.goto(url, timeout=60000)
-    page.wait_for_load_state("networkidle", timeout=60000)
-    time.sleep(3)
+    page.goto(url, timeout=120000)
+    page.wait_for_load_state("load", timeout=120000)
+    time.sleep(5)
 
 
 def place_orders_all_stores(page, context, hit, cfg):
