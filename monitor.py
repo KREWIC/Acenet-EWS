@@ -488,7 +488,10 @@ def run():
 
             with sync_playwright() as p:
                 headless = os.getenv("HEADLESS", "true").lower() == "true"
-                browser = p.chromium.launch(headless=headless)
+                browser = p.chromium.launch(
+                    headless=headless,
+                    args=["--no-sandbox", "--disable-dev-shm-usage"],
+                )
                 context = browser.new_context(
                     user_agent=MOBILE_USER_AGENT,
                     viewport=MOBILE_VIEWPORT,
