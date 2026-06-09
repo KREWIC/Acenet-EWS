@@ -117,6 +117,12 @@ def login(page, cfg):
 
         except Exception as e:
             log.warning(f"Login attempt {attempt + 1} failed: {e}")
+            try:
+                with open(f"login_fail_dump_{attempt + 1}.html", "w", encoding="utf-8") as f:
+                    f.write(page.content())
+                log.info(f"Saved login_fail_dump_{attempt + 1}.html for inspection")
+            except Exception:
+                pass
             if attempt < 2:
                 log.info("Waiting 30 seconds before retry...")
                 time.sleep(30)
