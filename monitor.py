@@ -98,7 +98,7 @@ def login(page, cfg):
         try:
             log.info(f"Login attempt {attempt + 1}/3...")
             page.goto(acenet["base_url"], timeout=60000)
-            page.wait_for_load_state("networkidle", timeout=60000)
+            page.wait_for_load_state("load", timeout=60000)
             time.sleep(2)
 
             page.wait_for_selector('input[type="text"]', timeout=15000)
@@ -106,7 +106,7 @@ def login(page, cfg):
             page.fill('input[type="password"]', acenet["password"])
             time.sleep(1)
             page.click('button.login-Btn')
-            page.wait_for_load_state("networkidle", timeout=60000)
+            page.wait_for_load_state("load", timeout=60000)
             time.sleep(2)
 
             if "adfs" in page.url.lower() or "login" in page.url.lower():
@@ -127,7 +127,7 @@ def login(page, cfg):
 
 def extract_sku_from_card(card):
     sku_element = card.query_selector('[class*="sku"], [id*="sku"], [data-sku]')
-    sku_text = sku_element.inner_text().strip() if sku_element else ""
+    sku_text = sku_element.inner_text().splitlines()[0].strip() if sku_element else ""
     if not sku_text:
         lines = [line.strip() for line in card.inner_text().splitlines()]
         sku_text = next((line for line in lines if line.upper().startswith("SKU") or "SKU:" in line.upper()), "")
