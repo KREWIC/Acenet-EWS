@@ -150,9 +150,9 @@ def search_pokemon(page, cfg):
 
     try:
         log.info(f"Searching: {url}")
-        page.goto(url, timeout=60000)
-        page.wait_for_load_state("networkidle", timeout=60000)
-        time.sleep(3)
+        page.goto(url, timeout=120000)
+        page.wait_for_load_state("load", timeout=120000)
+        time.sleep(5)
 
         # Verify we actually landed on the search results page
         if "/search/product" not in page.url:
@@ -272,13 +272,10 @@ def format_startup_message(hits, cold_watch_count=0):
 def switch_store(page, target_store):
     log.info(f"Switching to store {target_store}...")
     try:
-        # Click the store selector in the page header (shows current store number + T)
-        page.locator(f'text={target_store}T').first.click(timeout=10000)
-        # Wait for store picker modal search box
-        page.wait_for_selector('input[placeholder*="store" i], input[placeholder*="city" i]', timeout=10000)
+        page.locator('button[data-id="storeSelectorList"]').click(timeout=10000)
+        page.wait_for_selector('.store-number', timeout=10000)
         time.sleep(1)
-        # Click the target store row in the picker table
-        page.locator(f'text={target_store}T').last.click(timeout=10000)
+        page.locator(f'.store-number:has-text("{target_store}T")').click(timeout=10000)
         page.wait_for_load_state("networkidle", timeout=30000)
         time.sleep(2)
         log.info(f"Switched to store {target_store}")
@@ -341,42 +338,52 @@ def get_remaining_qty(popup):
         return None
 
 
+def get_popup_frame(popup):
+    """Find the active content frame within the item detail popup."""
+    for frame in popup.frames:
+        try:
+            frame.locator('input.qtyClass').wait_for(timeout=3000)
+            return frame
+        except Exception:
+            continue
+    return popup  # fallback to popup root if no frame found
+
+
 def attempt_order(popup, qty, sku):
     try:
-        # Fill Order Qty — try common selector patterns, will need adjustment if wrong
-        qty_input = popup.locator(
-            'input[id*="Qty" i], input[name*="Qty" i], input[id*="qty"], input[name*="qty"]'
-        ).first
-        qty_input.fill(str(qty), timeout=10000)
+        frame = get_popup_frame(popup)
+        log.info(f"SKU {sku}: using frame {frame.url if hasattr(frame, 'url') else 'root'}")
+
+        frame.locator('input.qtyClass').first.fill(str(qty), timeout=10000)
         time.sleep(1)
 
-        popup.locator('text=Express Checkout').click(timeout=10000)
+        frame.locator('input[id*="btnExpressCheckout"]').click(timeout=10000)
         time.sleep(2)
 
         # State: "greater than RSC quantity" — nothing available, skip
         try:
-            popup.wait_for_selector('text=greater than the quantity', timeout=4000)
+            frame.locator('text=greater than the quantity').wait_for(timeout=4000)
             log.info(f"SKU {sku}: qty exceeds RSC availability, skipping")
-            popup.locator('text=Cancel').click(timeout=5000)
+            frame.locator('text=Cancel').click(timeout=5000)
             return "skipped_exceeds_rsc"
         except PlaywrightTimeout:
             pass
 
         # State: qty input didn't register
         try:
-            popup.wait_for_selector('text=Please enter a quantity', timeout=2000)
-            log.warning(f"SKU {sku}: qty input failed — selector may need adjustment")
+            frame.locator('text=Please enter a quantity').wait_for(timeout=2000)
+            log.warning(f"SKU {sku}: qty input failed")
             return "error_qty_input"
         except PlaywrightTimeout:
             pass
 
-        # Should be on Review & Submit page
-        popup.wait_for_selector('text=Review & Submit', timeout=15000)
+        # Review & Submit page
+        frame.locator('text=Review & Submit').wait_for(timeout=15000)
         log.info(f"SKU {sku}: Review & Submit reached, clicking Checkout")
-        popup.locator('text=Checkout').last.click(timeout=10000)
+        frame.locator('input#btnCheckOut').click(timeout=10000)
 
-        # Wait for confirmation
-        popup.wait_for_selector('text=Your order was successfully submitted', timeout=20000)
+        # Confirmation
+        frame.locator('text=Your order was successfully submitted').wait_for(timeout=20000)
         log.info(f"SKU {sku}: order confirmed!")
         return "ordered"
 
@@ -388,19 +395,28 @@ def attempt_order(popup, qty, sku):
         return "error"
 
 
+def navigate_to_search(page, cfg):
+    acenet = cfg["acenet"]
+    url = SEARCH_URL.format(term=acenet["search_term"], user=acenet["username"])
+    page.goto(url, timeout=120000)
+    page.wait_for_load_state("load", timeout=120000)
+    time.sleep(5)
+
+
 def place_orders_all_stores(page, context, hit, cfg):
     stores = cfg["auto_order"]["stores"]
     primary_store = stores[0]
     results = []
 
-    for store in stores:
+    for i, store in enumerate(stores):
         log.info(f"--- Ordering {hit['sku']} for store {store} ---")
 
-        if not switch_store(page, store):
-            results.append({"store": store, "status": "error", "reason": "store switch failed"})
-            continue
+        if i > 0:
+            if not switch_store(page, store):
+                results.append({"store": store, "status": "error", "reason": "store switch failed"})
+                continue
+            navigate_to_search(page, cfg)
 
-        time.sleep(2)
         popup = open_item_detail(page, context, hit["sku"])
 
         if not popup:
@@ -411,7 +427,8 @@ def place_orders_all_stores(page, context, hit, cfg):
             remaining = get_remaining_qty(popup)
 
             if remaining is None:
-                results.append({"store": store, "status": "error", "reason": "could not read allocation"})
+                log.info(f"SKU {hit['sku']} store {store}: no allocation found, skipping")
+                results.append({"store": store, "status": "skipped", "reason": "no allocation available"})
                 popup.close()
                 continue
 
@@ -438,6 +455,7 @@ def place_orders_all_stores(page, context, hit, cfg):
                 pass
 
     switch_store(page, primary_store)
+    navigate_to_search(page, cfg)
     return results
 
 
