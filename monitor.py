@@ -115,6 +115,13 @@ def login(page, cfg):
             except PlaywrightTimeout:
                 raise Exception("Store selector not found after login — likely still on login page")
 
+            # Let post-login async activity settle before navigating away
+            try:
+                page.wait_for_load_state("networkidle", timeout=15000)
+            except PlaywrightTimeout:
+                pass
+            time.sleep(5)
+
             log.info("Login successful")
             return True
 
@@ -159,9 +166,24 @@ def search_pokemon(page, cfg):
 
     try:
         log.info(f"Searching: {url}")
-        page.goto(url, timeout=120000)
-        page.wait_for_load_state("load", timeout=120000)
-        time.sleep(5)
+        for nav_attempt in range(2):
+            try:
+                page.goto(url, timeout=120000)
+                page.wait_for_load_state("load", timeout=120000)
+                time.sleep(5)
+                break
+            except Exception as nav_err:
+                if nav_attempt == 0:
+                    log.warning(f"Search navigation failed ({nav_err}), re-establishing session and retrying...")
+                    time.sleep(10)
+                    try:
+                        page.goto(acenet["base_url"], timeout=30000)
+                        page.wait_for_load_state("load", timeout=30000)
+                        time.sleep(5)
+                    except Exception:
+                        pass
+                else:
+                    raise
 
         # Verify we actually landed on the search results page
         if "/search/product" not in page.url:
@@ -407,9 +429,24 @@ def attempt_order(popup, qty, sku):
 def navigate_to_search(page, cfg):
     acenet = cfg["acenet"]
     url = SEARCH_URL.format(term=acenet["search_term"], user=acenet["username"])
-    page.goto(url, timeout=120000)
-    page.wait_for_load_state("load", timeout=120000)
-    time.sleep(5)
+    for nav_attempt in range(2):
+        try:
+            page.goto(url, timeout=120000)
+            page.wait_for_load_state("load", timeout=120000)
+            time.sleep(5)
+            return
+        except Exception as nav_err:
+            if nav_attempt == 0:
+                log.warning(f"Search navigation failed ({nav_err}), re-establishing session and retrying...")
+                time.sleep(10)
+                try:
+                    page.goto(acenet["base_url"], timeout=30000)
+                    page.wait_for_load_state("load", timeout=30000)
+                    time.sleep(5)
+                except Exception:
+                    pass
+            else:
+                raise
 
 
 def place_orders_all_stores(page, context, hit, cfg):
