@@ -109,8 +109,11 @@ def login(page, cfg):
             page.wait_for_load_state("load", timeout=60000)
             time.sleep(2)
 
-            if "adfs" in page.url.lower() or "login" in page.url.lower():
-                raise Exception("Still on login page after submit")
+            # Wait for the store selector — only present when logged in
+            try:
+                page.wait_for_selector('button[data-id="storeSelectorList"]', timeout=15000)
+            except PlaywrightTimeout:
+                raise Exception("Store selector not found after login — likely still on login page")
 
             log.info("Login successful")
             return True
