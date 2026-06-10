@@ -7,11 +7,13 @@ Tracks hot/cold cycles so you get alerted when a SKU reopens for ordering.
 
 import json
 import os
+import random
 import re
 import logging
 import smtplib
 import time
 import traceback
+import urllib.parse
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -39,7 +41,15 @@ MOBILE_USER_AGENT = (
 MOBILE_VIEWPORT = {"width": 390, "height": 844}
 
 # ── Search URL ───────────────────────────────────────────────
-SEARCH_URL = 'https://acenet.aceservices.com/search/product?q={{"QueryText":"{term}","FilterQuery":"","TypeaheadField":"","IsRecentSearch":true,"UserId":"{user}"}}'
+def build_search_url(cfg):
+    acenet = cfg["acenet"]
+    query = json.dumps({
+        "QueryText": acenet["search_term"],
+        "FilterQuery": "",
+        "TypeaheadField": "",
+        "UserId": acenet["username"],
+    }, separators=(",", ":"))
+    return f"https://acenet.aceservices.com/search/product?q={urllib.parse.quote(query, safe='')}"
 
 
 SEEN_SKUS_FILE = "seen_skus.json"
@@ -158,18 +168,14 @@ def extract_sku_from_card(card):
 
 def search_pokemon(page, cfg):
     """Search for pokemon and return list of items with alert tags plus all visible SKUs."""
-    acenet = cfg["acenet"]
-    url = SEARCH_URL.format(
-        term=acenet["search_term"],
-        user=acenet["username"]
-    )
+    url = build_search_url(cfg)
 
     try:
         log.info(f"Searching: {url}")
         for nav_attempt in range(2):
             try:
-                page.goto(url, timeout=120000)
-                page.wait_for_load_state("load", timeout=120000)
+                with page.expect_navigation(wait_until="load", timeout=120000):
+                    page.evaluate(f"window.location.assign({json.dumps(url)})")
                 time.sleep(5)
                 break
             except Exception as nav_err:
@@ -177,8 +183,8 @@ def search_pokemon(page, cfg):
                     log.warning(f"Search navigation failed ({nav_err}), re-establishing session and retrying...")
                     time.sleep(10)
                     try:
-                        page.goto(acenet["base_url"], timeout=30000)
-                        page.wait_for_load_state("load", timeout=30000)
+                        with page.expect_navigation(wait_until="load", timeout=30000):
+                            page.evaluate(f"window.location.assign({json.dumps(cfg['acenet']['base_url'])})")
                         time.sleep(5)
                     except Exception:
                         pass
@@ -427,12 +433,11 @@ def attempt_order(popup, qty, sku):
 
 
 def navigate_to_search(page, cfg):
-    acenet = cfg["acenet"]
-    url = SEARCH_URL.format(term=acenet["search_term"], user=acenet["username"])
+    url = build_search_url(cfg)
     for nav_attempt in range(2):
         try:
-            page.goto(url, timeout=120000)
-            page.wait_for_load_state("load", timeout=120000)
+            with page.expect_navigation(wait_until="load", timeout=120000):
+                page.evaluate(f"window.location.assign({json.dumps(url)})")
             time.sleep(5)
             return
         except Exception as nav_err:
@@ -440,8 +445,8 @@ def navigate_to_search(page, cfg):
                 log.warning(f"Search navigation failed ({nav_err}), re-establishing session and retrying...")
                 time.sleep(10)
                 try:
-                    page.goto(acenet["base_url"], timeout=30000)
-                    page.wait_for_load_state("load", timeout=30000)
+                    with page.expect_navigation(wait_until="load", timeout=30000):
+                        page.evaluate(f"window.location.assign({json.dumps(cfg['acenet']['base_url'])})")
                     time.sleep(5)
                 except Exception:
                     pass
@@ -551,18 +556,26 @@ def run():
                 last_heartbeat_day = now.date()
 
             with sync_playwright() as p:
-                headless = os.getenv("HEADLESS", "true").lower() == "true"
+                headless = os.getenv("HEADLESS", "false").lower() == "true"
                 browser = p.chromium.launch(
                     headless=headless,
-                    args=["--no-sandbox", "--disable-dev-shm-usage"],
+                    args=[
+                        "--no-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-blink-features=AutomationControlled",
+                    ],
                 )
                 context = browser.new_context(
                     user_agent=MOBILE_USER_AGENT,
                     viewport=MOBILE_VIEWPORT,
                     is_mobile=True,
-                    has_touch=True
+                    has_touch=True,
                 )
                 page = context.new_page()
+                # Hide automation signals from bot detection
+                page.add_init_script(
+                    "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+                )
 
                 if not login(page, cfg):
                     send_alert(cfg, "AceNet Monitor ERROR", "Failed to log in. Check credentials in config.json.")
@@ -683,8 +696,9 @@ def run():
         else:
             consecutive_errors = 0
 
-        log.info(f"Sleeping {cfg['monitor']['poll_interval_minutes']} minutes...\n")
-        time.sleep(poll_seconds)
+        jitter = random.uniform(0, 60)
+        log.info(f"Sleeping {cfg['monitor']['poll_interval_minutes']} minutes (+{jitter:.0f}s jitter)...\n")
+        time.sleep(poll_seconds + jitter)
 
 
 if __name__ == "__main__":
