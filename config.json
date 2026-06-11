@@ -22,7 +22,7 @@
     "max_results_sanity": 50
   },
   "auto_order": {
-    "enabled": false,
+    "enabled": true,
     "stores": ["14320"]
   }
 }

@@ -14,7 +14,7 @@ import smtplib
 import time
 import traceback
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
@@ -550,6 +550,19 @@ def run():
     while True:
         try:
             now = datetime.now()
+
+            # Quiet period: 9:00 PM – 4:30 AM
+            in_quiet = now.hour >= 21 or now.hour < 4 or (now.hour == 4 and now.minute < 30)
+            if in_quiet:
+                if now.hour >= 21:
+                    wake = now.replace(hour=4, minute=30, second=0, microsecond=0)
+                    wake += timedelta(days=1)
+                else:
+                    wake = now.replace(hour=4, minute=30, second=0, microsecond=0)
+                sleep_secs = (wake - now).total_seconds()
+                log.info(f"Quiet period active. Sleeping until 4:30 AM ({sleep_secs/3600:.1f}h)...")
+                time.sleep(sleep_secs)
+                continue
 
             if now.hour == heartbeat_hour and now.date() != last_heartbeat_day:
                 send_alert(cfg, "AceNet Monitor Heartbeat", f"Monitor is alive. Last check: {now.strftime('%Y-%m-%d %H:%M')}")
