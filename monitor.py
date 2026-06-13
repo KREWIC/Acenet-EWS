@@ -28,8 +28,9 @@ _log_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(messa
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[_log_handler, logging.StreamHandler()]
+    handlers=[_log_handler, logging.StreamHandler(stream=__import__('sys').stdout)]
 )
+__import__('sys').stdout.reconfigure(encoding='utf-8')
 log = logging.getLogger(__name__)
 
 # ── Mobile user agent (iPhone 14) ────────────────────────────
@@ -53,6 +54,7 @@ def build_search_url(cfg):
 
 
 SEEN_SKUS_FILE = "seen_skus.json"
+ORDERED_SKUS_FILE = "ordered_skus.json"
 
 
 def load_config():
@@ -71,6 +73,19 @@ def load_seen_skus():
 def save_seen_skus(seen_skus):
     with open(SEEN_SKUS_FILE, "w") as f:
         json.dump(sorted(seen_skus), f, indent=2)
+
+
+def load_ordered_skus():
+    try:
+        with open(ORDERED_SKUS_FILE, "r") as f:
+            return set(json.load(f))
+    except FileNotFoundError:
+        return set()
+
+
+def save_ordered_skus(ordered_skus):
+    with open(ORDERED_SKUS_FILE, "w") as f:
+        json.dump(sorted(ordered_skus), f, indent=2)
 
 
 def send_alert(cfg, subject, body):
@@ -167,7 +182,7 @@ def extract_sku_from_card(card):
 
 
 def search_pokemon(page, cfg):
-    """Search for pokemon and return list of items with alert tags plus all visible SKUs."""
+    """Search for Pokemon trading cards and return non-cancelled candidates plus all visible SKUs."""
     url = build_search_url(cfg)
 
     try:
@@ -223,7 +238,7 @@ def search_pokemon(page, cfg):
             log.warning(f"Result count {len(cards)} exceeds sanity limit of {max_results} — wrong page loaded, skipping cycle.")
             return None, []
 
-        hits = []
+        candidates = []
         page_skus = []
 
         for card in cards:
@@ -240,26 +255,15 @@ def search_pokemon(page, cfg):
                 continue
             page_skus.append(sku_text)
 
-            html = card.inner_html()
-            has_new = "new-icon.svg" in html
-            has_on_order = "onordergreen" in html
-
-            if not (has_new or has_on_order):
+            status_el = card.query_selector('.status-badge')
+            status_text = status_el.inner_text().strip().upper() if status_el else ""
+            if "CANCELED" in status_text:
+                log.info(f"Skipping cancelled: {product_name} ({sku_text})")
                 continue
 
-            tags = []
-            if has_new:
-                tags.append("NEW")
-            if has_on_order:
-                tags.append("ON ORDER FOR RSC")
+            candidates.append({"name": product_name, "sku": sku_text})
 
-            hits.append({
-                "name": product_name,
-                "sku": sku_text,
-                "tags": tags,
-            })
-
-        return hits, page_skus
+        return candidates, page_skus
 
     except PlaywrightTimeout:
         log.error("Search timed out")
@@ -285,22 +289,15 @@ def format_alert_message(hits, reopened=False):
     return "\n".join(lines)
 
 
-def format_startup_message(hits, cold_watch_count=0):
-    """Format the startup inventory summary."""
+def format_startup_message(candidates):
     lines = ["ACENET MONITOR STARTED\n"]
     lines.append(f"Checked at: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
-
-    if hits:
-        lines.append(f"ITEMS OF INTEREST ({len(hits)}):")
-        for h in hits:
-            lines.append(f"  [{', '.join(h['tags'])}] {h['name']} {h['sku']}")
+    if candidates:
+        lines.append(f"CANDIDATES TO MONITOR ({len(candidates)}):")
+        for c in candidates:
+            lines.append(f"  {c['name']} ({c['sku']})")
     else:
-        lines.append("ITEMS OF INTEREST: None found")
-
-    lines.append("")
-    lines.append(f"STARTUP COLD WATCH ITEMS: {cold_watch_count}")
-    lines.append("These SKUs are being watched for RSC reopenings.")
-
+        lines.append("No eligible candidates found at startup.")
     return "\n".join(lines)
 
 
@@ -361,18 +358,40 @@ def open_item_detail(page, context, sku):
 
 def get_remaining_qty(popup):
     try:
-        text = popup.inner_text()
+        frame = get_popup_frame(popup)
+        text = frame.inner_text('body')
         match = re.search(r'Allocation QTY/Remaining QTY\s*:\s*(\d+)/(\d+)', text, re.IGNORECASE)
-        if not match:
-            log.warning("Could not find Allocation QTY/Remaining QTY on item detail page")
-            return None
-        allocated = int(match.group(1))
-        remaining = int(match.group(2))
-        log.info(f"Allocation: {allocated} total, {remaining} remaining")
-        return remaining
+        if match:
+            allocated = int(match.group(1))
+            remaining = int(match.group(2))
+            log.info(f"Allocation: {allocated} total, {remaining} remaining")
+            return remaining
+        backorder_match = re.search(r'Stock Reserve Backorder\s*:\s*(\d+)', text, re.IGNORECASE)
+        if backorder_match:
+            qty = int(backorder_match.group(1))
+            log.info(f"Stock Reserve Backorder qty: {qty}")
+            return qty
+        log.warning("Could not find qty on item detail page")
+        return None
     except Exception as e:
         log.error(f"Failed to read remaining qty: {e}")
         return None
+
+
+def has_rsc_arrival(popup):
+    try:
+        frame = get_popup_frame(popup)
+        selector = '#ctl00_ctl00_contentMainPlaceHolder_MainContent_shipMethod_lblExpDeliveryText'
+        try:
+            frame.locator(selector).wait_for(timeout=8000)
+            text = frame.locator(selector).inner_text().strip()
+            return "Expected Arrival in RSC" in text
+        except Exception:
+            text = frame.inner_text('body')
+            return "Expected Arrival in RSC" in text
+    except Exception as e:
+        log.error(f"Failed to check RSC arrival text: {e}")
+        return False
 
 
 def get_popup_frame(popup):
@@ -539,13 +558,13 @@ def run():
     log.info("AceNet monitor starting...")
 
     last_heartbeat_day = None
-    known_hits = {}
-    cold_hits = set()
     seen_skus = load_seen_skus()
     log.info(f"Loaded {len(seen_skus)} previously seen SKUs from disk")
     first_run = True
     consecutive_errors = 0
-    ordered_skus = set()
+    ordered_skus = load_ordered_skus()
+    if ordered_skus:
+        log.info(f"Skipping {len(ordered_skus)} previously ordered SKUs")
 
     while True:
         try:
@@ -569,7 +588,7 @@ def run():
                 last_heartbeat_day = now.date()
 
             with sync_playwright() as p:
-                headless = os.getenv("HEADLESS", "false").lower() == "true"
+                headless = os.getenv("HEADLESS", "false").lower() == "false"
                 browser = p.chromium.launch(
                     headless=headless,
                     args=[
@@ -596,107 +615,74 @@ def run():
                     time.sleep(poll_seconds)
                     continue
 
-                hits, page_skus = search_pokemon(page, cfg)
-                items_to_order = []
+                candidates, page_skus = search_pokemon(page, cfg)
 
-                if hits is None:
+                if candidates is None:
                     log.warning("Scrape returned error, will retry next cycle")
 
-                elif first_run:
-                    for h in hits:
-                        known_hits[h["sku"]] = set(h["tags"])
-
-                    startup_cold_items = set(page_skus) - set(known_hits.keys())
-                    for sku in sorted(startup_cold_items):
-                        log.info(f"Startup cold watch SKU: {sku}")
-                        cold_hits.add(sku)
-
-                    new_to_seen = set(page_skus) - seen_skus
-                    if new_to_seen:
-                        seen_skus.update(new_to_seen)
-                        save_seen_skus(seen_skus)
-                        log.info(f"Seeded seen inventory with {len(new_to_seen)} SKUs")
-
-                    msg = format_startup_message(hits, cold_watch_count=len(startup_cold_items))
-                    send_alert(cfg, "AceNet Monitor Started — Items of Interest", msg)
-                    first_run = False
-
                 else:
-                    current_skus = {h["sku"] for h in hits}
-
-                    newly_cold = set(known_hits.keys()) - current_skus
-                    for sku in newly_cold:
-                        log.info(f"SKU went cold (watching for reorder): {sku}")
-                        cold_hits.add(sku)
-                        del known_hits[sku]
-
-                    tag_change_hits = []
-                    for h in hits:
-                        if h["sku"] in known_hits:
-                            new_tags = set(h["tags"]) - known_hits[h["sku"]]
-                            if new_tags:
-                                tag_change_hits.append({**h, "tags": list(new_tags)})
-                                known_hits[h["sku"]] = set(h["tags"])
-
-                    new_hits = [h for h in hits if h["sku"] not in known_hits]
-                    reopened_hits = [h for h in new_hits if h["sku"] in cold_hits]
-                    truly_new_hits = [h for h in new_hits if h["sku"] not in cold_hits]
-
-                    if tag_change_hits:
-                        msg = format_alert_message(tag_change_hits)
-                        send_alert(cfg, f"🔔 ACENET RSC UPDATE — {len(tag_change_hits)} SKU(S) CHANGED STATUS", msg)
-
-                    if reopened_hits:
-                        msg = format_alert_message(reopened_hits, reopened=True)
-                        send_alert(cfg, f"🔁 ACENET REORDER — {len(reopened_hits)} SKU(S) BACK IN PLAY", msg)
-                        for h in reopened_hits:
-                            known_hits[h["sku"]] = set(h["tags"])
-                            cold_hits.discard(h["sku"])
-
-                    if truly_new_hits:
-                        msg = format_alert_message(truly_new_hits)
-                        send_alert(cfg, f"🚨 ACENET POKEMON — {len(truly_new_hits)} NEW ITEM(S)", msg)
-                        for h in truly_new_hits:
-                            known_hits[h["sku"]] = set(h["tags"])
-
                     never_seen = set(page_skus) - seen_skus
                     if never_seen:
-                        sku_list = "\n".join(sorted(never_seen))
-                        send_alert(
-                            cfg,
-                            f"🆕 ACENET — {len(never_seen)} NEW SKU(S) IN CATALOG",
-                            f"The following SKU(s) have never been seen before:\n\n{sku_list}\n\nCheck AceNet for details."
-                        )
-                        seen_skus.update(never_seen)
-                        save_seen_skus(seen_skus)
-                        log.info(f"Added {len(never_seen)} new SKUs to seen inventory")
-
-                    if not new_hits and not tag_change_hits:
-                        log.info(f"No new hits this cycle. Hot: {len(known_hits)} Cold: {len(cold_hits)}")
-
-                    items_to_order = [h for h in (tag_change_hits + reopened_hits + truly_new_hits)
-                                      if h["sku"] not in ordered_skus]
-
-                # Auto-order within the same browser session
-                if auto_order_enabled and items_to_order:
-                    for hit in items_to_order:
-                        log.info(f"Auto-ordering: {hit['name']} (SKU: {hit['sku']})")
-                        try:
-                            results = place_orders_all_stores(page, context, hit, cfg)
-                            ordered_skus.add(hit["sku"])
-                            summary = format_order_summary(hit, results)
-                            any_success = any(r["status"] == "ordered" for r in results)
-                            subject = (f"🛒 ORDER PLACED: {hit['name']}" if any_success
-                                       else f"⚠️ ORDER ATTEMPTED: {hit['name']}")
-                            send_alert(cfg, subject, summary)
-                        except Exception:
-                            err = traceback.format_exc()
-                            log.error(f"Auto-order failed for {hit['sku']}: {err}")
+                        if first_run:
+                            seen_skus.update(never_seen)
+                            save_seen_skus(seen_skus)
+                            log.info(f"Seeded seen inventory with {len(never_seen)} SKUs")
+                        else:
+                            sku_list = "\n".join(sorted(never_seen))
                             send_alert(
                                 cfg,
-                                f"⚠️ AUTO-ORDER FAILED: {hit['name']}",
-                                f"Auto-ordering failed — please order manually.\n\nSKU: {hit['sku']}\n\nError:\n{err}"
+                                f"🆕 ACENET — {len(never_seen)} NEW SKU(S) IN CATALOG",
+                                f"New SKUs found:\n\n{sku_list}\n\nCheck AceNet for details."
                             )
+                            seen_skus.update(never_seen)
+                            save_seen_skus(seen_skus)
+
+                    if first_run:
+                        msg = format_startup_message(candidates)
+                        send_alert(cfg, "AceNet Monitor Started — Candidates Found", msg)
+                        first_run = False
+
+                    to_check = [c for c in candidates if c["sku"] not in ordered_skus]
+                    log.info(f"Candidates: {len(candidates)} total, {len(to_check)} to check (skipping {len(candidates) - len(to_check)} already ordered)")
+
+                    if auto_order_enabled:
+                        for candidate in to_check:
+                            popup = open_item_detail(page, context, candidate["sku"])
+                            if not popup:
+                                continue
+                            try:
+                                if has_rsc_arrival(popup):
+                                    log.info(f"RSC arrival found: {candidate['name']} ({candidate['sku']})")
+                                    popup.close()
+                                    results = place_orders_all_stores(page, context, candidate, cfg)
+                                    ordered_skus.add(candidate["sku"])
+                                    save_ordered_skus(ordered_skus)
+                                    all_zero = all(r.get("reason") == "qty is 0" for r in results)
+                                    if all_zero:
+                                        log.info(f"SKU {candidate['sku']}: all stores at 0 allocation, will not recheck")
+                                    else:
+                                        summary = format_order_summary(candidate, results)
+                                        any_success = any(r["status"] == "ordered" for r in results)
+                                        subject = (f"🛒 ORDER PLACED: {candidate['name']}" if any_success
+                                                   else f"⚠️ ORDER ATTEMPTED: {candidate['name']}")
+                                        send_alert(cfg, subject, summary)
+                                else:
+                                    log.info(f"No RSC arrival: {candidate['sku']}")
+                                    popup.close()
+                            except Exception:
+                                err = traceback.format_exc()
+                                log.error(f"Error processing {candidate['sku']}: {err}")
+                                send_alert(
+                                    cfg,
+                                    f"⚠️ AUTO-ORDER FAILED: {candidate['name']}",
+                                    f"Auto-ordering failed — please order manually.\n\nSKU: {candidate['sku']}\n\nError:\n{err}"
+                                )
+                                try:
+                                    popup.close()
+                                except Exception:
+                                    pass
+                    else:
+                        log.info(f"Auto-order disabled. {len(to_check)} candidates pending.")
 
                 browser.close()
 

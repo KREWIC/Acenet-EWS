@@ -17,7 +17,7 @@
     ]
   },
   "monitor": {
-    "poll_interval_minutes": 5,
+    "poll_interval_minutes": 10,
     "heartbeat_hour": 8,
     "max_results_sanity": 50
   },
