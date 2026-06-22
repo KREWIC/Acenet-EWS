@@ -583,7 +583,7 @@ def run():
                 last_heartbeat_day = now.date()
 
             with sync_playwright() as p:
-                headless = os.getenv("HEADLESS", "true").lower() == "false"
+                headless = os.getenv("HEADLESS", "false").lower() == "false"
                 browser = p.chromium.launch(
                     headless=headless,
                     args=[
