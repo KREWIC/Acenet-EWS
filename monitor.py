@@ -233,11 +233,6 @@ def search_pokemon(page, cfg):
         cards = frame.query_selector_all(".product-outer")
         log.info(f"Found {len(cards)} product cards")
 
-        max_results = cfg["monitor"].get("max_results_sanity", 50)
-        if len(cards) > max_results:
-            log.warning(f"Result count {len(cards)} exceeds sanity limit of {max_results} — wrong page loaded, skipping cycle.")
-            return None, []
-
         candidates = []
         page_skus = []
 
@@ -588,7 +583,7 @@ def run():
                 last_heartbeat_day = now.date()
 
             with sync_playwright() as p:
-                headless = os.getenv("HEADLESS", "true").lower() == "true"
+                headless = os.getenv("HEADLESS", "true").lower() == "false"
                 browser = p.chromium.launch(
                     headless=headless,
                     args=[
@@ -619,6 +614,7 @@ def run():
 
                 if candidates is None:
                     log.warning("Scrape returned error, will retry next cycle")
+                    send_alert(cfg, "AceNet Monitor Search Failed", "Search scrape failed (login OK but product search errored). Will retry next cycle.")
 
                 else:
                     never_seen = set(page_skus) - seen_skus
